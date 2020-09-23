@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(LibTarget)</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Types.fs" />
+    <Compile Include="Parsers.fs" />
+    <Compile Include="TaskParser.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="fparsec" Version="1.0.3" />
+  </ItemGroup>
+
+</Project>
