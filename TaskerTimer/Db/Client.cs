@@ -73,55 +73,32 @@ delete from current_tasks where send_at < @current_date and not exists (select 1
 with today as (
 	select chat_id, task_name, message, is_html, starts_at
 	from scheduled_tasks
-	where
-	starts_at < (@current_date + @creation_interval)
-	and
-	(
-		extract( epoch from (@current_date + @creation_interval) - starts_at )::int
-		%
-		extract( epoch from period )::int
-		<
-		extract( epoch from @creation_interval )::int
-	)
-	order by starts_at::time
-)
-, tmp as (
-	select
-	(select today.task_name from today where starts_at::time = '17:10') as lang,
-	today.*
-	from today order by starts_at::time limit 1
-)
-, lang as (
-	select chat_id,
-	case lang
-		when 'Злоебучий диплом' then 'Сегодня мы говорим по-русски'
-		when 'Svenska Språk' then 'idag talar vi Svenska'
-		when 'Deutsche Sprache' then 'heute sprechen wir Deutsch'
-		when 'English Language' then 'we speak English today'
-		else lang
-	end task_name,
-	message, is_html, starts_at
-	from tmp
-)
-, today_full as (
-	select * from lang
-	union
-	select * from today
 )
 insert into current_tasks
 (chat_id, title, message, is_html, send_at)
 select chat_id, task_name, coalesce(message, task_name), is_html, @current_date + starts_at::time
-from today_full
+from today
 ";
 
-		public static async Task CreateTasksScheduledForIntervalAsync( TimeSpan interval )
+		public static async Task CreateTasksScheduledForIntervalAsync( )
 		{
-			var currentDate = DateTime.UtcNow.Date;
+			var currentDate = DateTime.UtcNow;
 			using var conn = await GetConnectionAsync().ConfigureAwait( false );
 			using var command = conn.CreateCommand();
 			command.Parameters.Add( new NpgsqlParameter<DateTime>( "current_date", currentDate ) );
-			command.Parameters.Add( new NpgsqlParameter<TimeSpan>( "creation_interval", interval ) );
 			command.CommandText = _createTodayTasksSql;
+			await command.ExecuteNonQueryAsync().ConfigureAwait( false );
+		}
+
+		private const string _deleteTodayTasksSql = @"
+delete from current_tasks where not exists (select 1 from sending_tasks where task_to_send = id);
+";
+
+		public static async Task DeleteTasksScheduledForIntervalAsync()
+		{
+			using var conn = await GetConnectionAsync().ConfigureAwait( false );
+			using var command = conn.CreateCommand();
+			command.CommandText = _deleteTodayTasksSql;
 			await command.ExecuteNonQueryAsync().ConfigureAwait( false );
 		}
 
