@@ -1,0 +1,9 @@
+﻿<Project>
+  <PropertyGroup>
+    <LangVersion>8</LangVersion>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<WarningsAsErrors />
+		<LibTarget>netstandard2.0</LibTarget>
+		<ExeTarget>netcoreapp2.2</ExeTarget>
+  </PropertyGroup>
+</Project>
