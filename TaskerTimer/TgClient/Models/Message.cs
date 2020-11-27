@@ -12,6 +12,7 @@ namespace TaskerTimer.TgClient.Models
 		public DateTime Date => new DateTime( 1970, 1, 1, 0, 0, 0 ).AddSeconds( date );
 		public Chat chat { get; set; }
 		public string text { get; set; }
+		public User from { get; set; }
 	}
 #pragma warning restore IDE1006 // Naming Styles
 }
