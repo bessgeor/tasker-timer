@@ -117,8 +117,10 @@ namespace TaskerTimer
 
 			var tasks = await Db.Client.CreateSendingMessagesForCurrentMinuteAsync( now ).ConfigureAwait( false );
 			log.LogInformation( $"downloaded {tasks.Count.ToString()} tasks" );
+
 			if ( tasks.Count == 0 )
 				return;
+
 			foreach ( var task in tasks )
 				HandleTaskAdd( (log, task), v => SendMessageAsync( v ) );
 
