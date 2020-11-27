@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using NodaTime;
 using Npgsql;
 using TaskerTimer.Db.Models;
 
@@ -135,7 +136,7 @@ from today_full
 
 		public static async Task CreateTasksScheduledForIntervalAsync( TimeSpan interval )
 		{
-			var currentDate = DateTime.UtcNow.Date;
+			var currentDate = LocalDate.FromDateTime( DateTime.UtcNow.Date.AddHours( 2 ) ).ToDateTimeUnspecified();
 			using var conn = await GetConnectionAsync().ConfigureAwait( false );
 			using var command = conn.CreateCommand();
 			command.Parameters.Add( new NpgsqlParameter<DateTime>( "current_date", currentDate ) );
