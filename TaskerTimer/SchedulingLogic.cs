@@ -161,6 +161,15 @@ namespace TaskerTimer
 			static async Task SendMessageAsync( (ILogger, SendingTask) deps )
 			{
 				var (log, message) = deps;
+
+				if ( message.IsFirst )
+				{
+					var chatId = message.ChatId;
+					var response = await Db.Client.GetCurrentTasksTextForChatAsync( chatId, limit: 100, CancellationToken.None ).ConfigureAwait( false );
+					var m = await Telegram.SendMessageAsync( chatId, isHtml: true, response, taskId: null, log, CancellationToken.None ).ConfigureAwait( false );
+					log.LogInformation( $"sent overview message {m.message_id}" );
+				}
+
 				var msg = await Telegram
 					.SendMessageAsync( message.ChatId, message.IsHtml, message.Message, message.Id, log, CancellationToken.None )
 					.ConfigureAwait( false )

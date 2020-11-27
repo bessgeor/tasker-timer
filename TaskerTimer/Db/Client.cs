@@ -262,9 +262,12 @@ with to_send as (
 	union distinct
 	select task_to_send id from sending_tasks
 )
-select id, chat_id, is_html, message
-from current_tasks
-inner join task_ids using(id)
+select
+id, chat_id, is_html, message,
+(select c.id = min(c2.id) from current_tasks c2 where c.chat_id = c2.chat_id)
+and (select count(*) = 0 from tg_messages tg where tg.sending_task_id = c.id)
+from current_tasks c
+inner join task_ids x using(id)
 ";
 
 		public static async Task<IReadOnlyList<SendingTask>> CreateSendingMessagesForCurrentMinuteAsync( DateTime now )
@@ -282,7 +285,8 @@ inner join task_ids using(id)
 				var chatId = reader.GetString( 1 );
 				var isHtml = reader.GetBoolean( 2 );
 				var message = reader.GetString( 3 );
-				result.Add( new SendingTask( taskId, chatId, isHtml, message ) );
+				var isFirst = reader.GetBoolean( 4 );
+				result.Add( new SendingTask( taskId, chatId, isHtml, message, isFirst ) );
 			}
 			return result;
 		}
