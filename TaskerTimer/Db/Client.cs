@@ -94,7 +94,7 @@ with today as (
 	select chat_id, task_name, message, is_html, starts_at
 	from scheduled_tasks
 	where
-	starts_at < (@current_date + @creation_interval)
+	(@current_date + starts_at) < (@current_date + @creation_interval)
 	and
 	(
 		extract( epoch from (@current_date + @creation_interval) - starts_at )::int
@@ -103,35 +103,12 @@ with today as (
 		<
 		extract( epoch from @creation_interval )::int
 	)
-	order by starts_at::time
-)
-, tmp as (
-	select
-	(select today.task_name from today where starts_at::time = '17:10') as lang,
-	today.*
-	from today order by starts_at::time limit 1
-)
-, lang as (
-	select chat_id,
-	case lang
-		when 'Злоебучий диплом' then 'Сегодня мы говорим по-русски'
-		when 'Svenska Språk' then 'idag talar vi Svenska'
-		when 'Deutsche Sprache' then 'heute sprechen wir Deutsch'
-		when 'English Language' then 'we speak English today'
-		else lang
-	end task_name,
-	message, is_html, starts_at
-	from tmp
-)
-, today_full as (
-	select * from lang
-	union
-	select * from today
+	order by starts_at
 )
 insert into current_tasks
 (chat_id, title, message, is_html, send_at)
-select chat_id, task_name, coalesce(message, task_name), is_html, @current_date + starts_at::time
-from today_full
+select chat_id, task_name, coalesce(message, task_name), is_html, @current_date + starts_at
+from today
 ";
 
 		public static async Task CreateTasksScheduledForIntervalAsync( TimeSpan interval )
