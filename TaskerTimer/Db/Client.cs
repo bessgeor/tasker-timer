@@ -68,6 +68,25 @@ limit @limit
 			return result.ToString();
 		}
 
+
+		private const string _isAuthenticatedSql = @"
+select count(*) = 1 from allowed_users where id = @id and username = @username
+";
+
+		public static async Task<bool> IsAuthenticatedAsync( long userId, string username, CancellationToken token )
+		{
+			using var conn = await GetConnectionAsync( token ).ConfigureAwait( false );
+			using var comm = conn.CreateCommand();
+			comm.CommandText = _isAuthenticatedSql;
+			comm.Parameters.Add( new NpgsqlParameter( "id", userId ) );
+			comm.Parameters.Add( new NpgsqlParameter( "username", username ) );
+
+			using var reader = await comm.ExecuteReaderAsync( token ).ConfigureAwait( false );
+			while ( await reader.ReadAsync( token ).ConfigureAwait( false ) )
+				return reader.GetBoolean( 0 );
+			return false;
+		}
+
 		private const string _createTodayTasksSql = @"
 delete from current_tasks where send_at < @current_date and not exists (select 1 from sending_tasks where task_to_send = id);
 with today as (

@@ -7,6 +7,8 @@ namespace TaskerTimer.MessageProcessors
 {
 	internal abstract class CommandProcessor : IMessageProcessor
 	{
+		public bool RequiresAuthentication => true;
+		public bool IsExclusive => true;
 		public bool CanProcess( Message message ) => message?.text?.StartsWith( Command ) == true;
 
 		protected abstract string Command { get; }
