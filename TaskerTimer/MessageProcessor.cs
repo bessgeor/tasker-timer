@@ -29,9 +29,9 @@ namespace TaskerTimer
 			}
 			foreach ( var (name, processor) in _processors )
 			{
-				var canProccess = processor.CanProcess( message );
-				logger.LogInformation( $"processor {name} can{( canProccess ? "" : "'t" )} process message {message.text}" );
-				if ( canProccess )
+				var canProcess = processor.CanProcess( message );
+				logger.LogInformation( $"processor {name} can{( canProcess ? "" : "'t" )} process message {message.text}" );
+				if ( canProcess )
 					await processor.ProcessAsync( message, logger, cancellation ).ConfigureAwait( false );
 			}
 		}
