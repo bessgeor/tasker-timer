@@ -1,0 +1,34 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: DotNetCoreCLI@2
+  inputs:
+    includeNuGetOrg: true
+    publishWebProjects: false
+    projects: 'TaskerTimer'
+    command: publish
+    arguments: -m -o /publish
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '/publish'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+- task: AzureFunctionApp@1
+  inputs:
+    azureSubscription: 'Azure subscription 1(65666841-eceb-433b-a5b1-da1d99b2b794)'
+    appType: 'functionAppLinux'
+    appName: 'tasker-timer'
+    package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+    runtimeStack: 'DOCKER|microsoft/azure-functions-dotnet-core2.0:2.0'
+    startUpCommand: 'dotnet TaskerTimer.dll'
