@@ -174,9 +174,9 @@ namespace TaskerTimer
 					.SendMessageAsync( message.ChatId, message.IsHtml, message.Message, message.Id, log, CancellationToken.None )
 					.ConfigureAwait( false )
 				;
-				log.LogInformation( $"message sent succesfully. {( msg is null ? "unparsed" : msg.message_id is null ? "message id is null" : msg.message_id )}" );
+				log.LogInformation( $"message sent succesfully. {( msg is null ? "unparsed" : msg.message_id ?? "message id is null" )}" );
 
-				if ( msg == null || msg.message_id == null )
+				if ( msg?.message_id == null )
 					return;
 
 				await Db.Client.SaveTelegramMessageSentAsync( new MessageSent( message.Id, message.ChatId, msg.message_id, msg.Date ) ).ConfigureAwait( false );
