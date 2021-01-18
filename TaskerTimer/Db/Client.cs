@@ -91,7 +91,7 @@ select count(*) = 1 from allowed_users where id = @id and username = @username
 		private const string _createTodayTasksSql = @"
 delete from current_tasks where send_at < @current_date and not exists (select 1 from sending_tasks where task_to_send = id);
 with today as (
-	select chat_id, task_name, message, is_html, starts_at
+	select chat_id, task_name, message, is_html, starts_at, active
 	from scheduled_tasks
 	where
 	(@current_date + starts_at) < (@current_date + @creation_interval)
@@ -103,11 +103,12 @@ with today as (
 		<
 		extract( epoch from @creation_interval )::int
 	)
+	and active
 	order by starts_at
 )
 insert into current_tasks
-(chat_id, title, message, is_html, send_at)
-select chat_id, task_name, coalesce(message, task_name), is_html, @current_date + starts_at
+(chat_id, title, message, is_html, send_at, active)
+select chat_id, task_name, coalesce(message, task_name), is_html, @current_date + starts_at, active
 from today
 ";
 
@@ -249,6 +250,7 @@ with to_send as (
 	where
 	not is_sending_created
 	and send_at < @now + interval '30 seconds'
+	and active
 	returning id
 )
 , inserted_task_ids as (
