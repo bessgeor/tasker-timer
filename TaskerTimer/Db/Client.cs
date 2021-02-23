@@ -231,6 +231,41 @@ where id = any(@ids)
 			return await command.ExecuteNonQueryAsync( token ).ConfigureAwait( false );
 		}
 
+		private const string _muteTodayTasksSql = @"
+update current_tasks
+set active = @active
+where chat_id = @chat_id
+and not is_sending_created
+";
+
+		public static async Task<int> MuteTodayTasksAsync( string chatId, bool mute, CancellationToken token )
+		{
+			using var conn = await GetConnectionAsync( token ).ConfigureAwait( false );
+			using var command = conn.CreateCommand();
+			command.Parameters.Add( new NpgsqlParameter<string>( "chat_id", chatId ) );
+			command.Parameters.Add( new NpgsqlParameter<bool>( "active", !mute ) );
+			command.CommandText = _muteTodayTasksSql;
+			return await command.ExecuteNonQueryAsync( token ).ConfigureAwait( false );
+		}
+
+		private const string _muteAllTasksSql =
+			"begin transaction;" + _muteTodayTasksSql + @";
+update scheduled_tasks
+set active = @active
+where chat_id = @chat_id
+;
+commit;";
+
+		public static async Task<int> MuteAllTasksAsync( string chatId, bool mute, CancellationToken token )
+		{
+			using var conn = await GetConnectionAsync( token ).ConfigureAwait( false );
+			using var command = conn.CreateCommand();
+			command.Parameters.Add( new NpgsqlParameter<string>( "chat_id", chatId ) );
+			command.Parameters.Add( new NpgsqlParameter<bool>( "active", !mute ) );
+			command.CommandText = _muteAllTasksSql;
+			return await command.ExecuteNonQueryAsync( token ).ConfigureAwait( false );
+		}
+
 		private const string _getTaskMessageSql = @"select message from current_tasks where id = @current_task_id";
 
 		public static async Task<string> GetTaskMessageAsync( int currentTaskId, CancellationToken token )
