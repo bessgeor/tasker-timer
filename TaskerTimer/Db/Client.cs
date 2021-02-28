@@ -103,7 +103,6 @@ with today as (
 		<
 		extract( epoch from @creation_interval )::int
 	)
-	and active
 	order by starts_at
 )
 insert into current_tasks
